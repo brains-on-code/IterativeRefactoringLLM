@@ -1,0 +1,80 @@
+package com.thealgorithms.searches;
+
+class KMPSearch {
+
+    int kmpSearch(String pattern, String text) {
+        if (pattern == null || text == null) {
+            System.out.println("No pattern found");
+            return -1;
+        }
+
+        int patternLength = pattern.length();
+        int textLength = text.length();
+
+        if (isInvalidInput(patternLength, textLength)) {
+            System.out.println("No pattern found");
+            return -1;
+        }
+
+        int[] lps = buildLongestPrefixSuffixArray(pattern);
+        int patternIndex = 0;
+        int textIndex = 0;
+
+        while (textIndex < textLength) {
+            char patternChar = pattern.charAt(patternIndex);
+            char textChar = text.charAt(textIndex);
+
+            if (patternChar == textChar) {
+                patternIndex++;
+                textIndex++;
+
+                if (patternIndex == patternLength) {
+                    int foundIndex = textIndex - patternIndex;
+                    System.out.println("Found pattern at index " + foundIndex);
+                    return foundIndex;
+                }
+            } else {
+                if (patternIndex != 0) {
+                    patternIndex = lps[patternIndex - 1];
+                } else {
+                    textIndex++;
+                }
+            }
+        }
+
+        System.out.println("No pattern found");
+        return -1;
+    }
+
+    private boolean isInvalidInput(int patternLength, int textLength) {
+        return patternLength == 0 || textLength == 0 || patternLength > textLength;
+    }
+
+    private int[] buildLongestPrefixSuffixArray(String pattern) {
+        int patternLength = pattern.length();
+        int[] lps = new int[patternLength];
+
+        int lengthOfPreviousLPS = 0;
+        int currentIndex = 1;
+
+        while (currentIndex < patternLength) {
+            char currentChar = pattern.charAt(currentIndex);
+            char previousLPSChar = pattern.charAt(lengthOfPreviousLPS);
+
+            if (currentChar == previousLPSChar) {
+                lengthOfPreviousLPS++;
+                lps[currentIndex] = lengthOfPreviousLPS;
+                currentIndex++;
+            } else {
+                if (lengthOfPreviousLPS != 0) {
+                    lengthOfPreviousLPS = lps[lengthOfPreviousLPS - 1];
+                } else {
+                    lps[currentIndex] = 0;
+                    currentIndex++;
+                }
+            }
+        }
+
+        return lps;
+    }
+}

@@ -1,0 +1,59 @@
+package com.thealgorithms.others;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class MaximumSlidingWindow {
+
+    /**
+     * Computes the maximum value in every contiguous subarray (sliding window)
+     * of size {@code windowSize}.
+     *
+     * @param nums       the input array
+     * @param windowSize the size of the sliding window
+     * @return an array where each element is the maximum of a sliding window;
+     *         returns an empty array if input is invalid
+     */
+    public int[] maxSlidingWindow(int[] nums, int windowSize) {
+        if (nums == null || nums.length == 0 || windowSize <= 0 || windowSize > nums.length) {
+            return new int[0];
+        }
+
+        int n = nums.length;
+        int[] result = new int[n - windowSize + 1];
+
+        /*
+         * Deque of indices into nums.
+         * Invariant:
+         *  - Indices are always within the current window.
+         *  - Values at those indices are in non-increasing order:
+         *      nums[deque[0]] >= nums[deque[1]] >= ...
+         *  Thus, nums[deque[0]] is always the maximum for the current window.
+         */
+        Deque<Integer> deque = new ArrayDeque<>();
+
+        for (int currentIndex = 0; currentIndex < n; currentIndex++) {
+            int windowStartIndex = currentIndex - windowSize + 1;
+
+            // Remove indices that are left of the current window
+            if (!deque.isEmpty() && deque.peekFirst() < windowStartIndex) {
+                deque.pollFirst();
+            }
+
+            // Maintain non-increasing order of values in the deque
+            while (!deque.isEmpty() && nums[deque.peekLast()] < nums[currentIndex]) {
+                deque.pollLast();
+            }
+
+            // Add current index as a candidate for maximum
+            deque.offerLast(currentIndex);
+
+            // Once the first full window is formed, record its maximum
+            if (currentIndex >= windowSize - 1) {
+                result[windowStartIndex] = nums[deque.peekFirst()];
+            }
+        }
+
+        return result;
+    }
+}

@@ -1,0 +1,72 @@
+package com.thealgorithms.scheduling;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+/**
+ * Schedules tasks with start and end times and
+ * can return task names ordered by their duration.
+ */
+public class TaskScheduler {
+
+    /**
+     * Represents a scheduled task with a name, start time, and end time.
+     */
+    static class Task {
+        private final String name;
+        private final int startTime;
+        private final int endTime;
+
+        Task(String name, int startTime, int endTime) {
+            this.name = name;
+            this.startTime = startTime;
+            this.endTime = endTime;
+        }
+
+        /**
+         * Returns the duration of the task.
+         *
+         * @return duration as (endTime - startTime)
+         */
+        int getDuration() {
+            return endTime - startTime;
+        }
+
+        /**
+         * Returns the task name.
+         *
+         * @return task name
+         */
+        String getName() {
+            return name;
+        }
+    }
+
+    private final List<Task> tasks = new ArrayList<>();
+
+    /**
+     * Adds a task to the scheduler.
+     *
+     * @param name      the task name
+     * @param startTime the task start time
+     * @param endTime   the task end time
+     */
+    public void addTask(String name, int startTime, int endTime) {
+        tasks.add(new Task(name, startTime, endTime));
+    }
+
+    /**
+     * Returns task names sorted by their duration in ascending order.
+     *
+     * @return list of task names sorted from shortest to longest duration
+     */
+    public List<String> getTaskNamesOrderedByDuration() {
+        tasks.sort(Comparator.comparingInt(Task::getDuration));
+        List<String> taskNames = new ArrayList<>(tasks.size());
+        for (Task task : tasks) {
+            taskNames.add(task.getName());
+        }
+        return taskNames;
+    }
+}

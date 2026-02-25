@@ -1,0 +1,127 @@
+package com.thealgorithms.datastructures.trees;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+/**
+ * Computes the Lowest Common Ancestor (LCA) of two nodes in a tree.
+ *
+ * <p>Input format (from standard input):
+ * <pre>
+ * n                      // number of nodes (0..n-1)
+ * n-1 lines: u v         // undirected edges of the tree
+ * a b                    // two nodes for which to compute the LCA
+ * </pre>
+ *
+ * <p>Output:
+ * <pre>
+ * lca(a, b)
+ * </pre>
+ */
+public final class LowestCommonAncestorSolver {
+
+    private static final Scanner INPUT = new Scanner(System.in);
+
+    private LowestCommonAncestorSolver() {
+        // Utility class; prevent instantiation.
+    }
+
+    public static void main(String[] args) {
+        int nodeCount = INPUT.nextInt();
+        int edgeCount = nodeCount - 1;
+
+        List<List<Integer>> adjacencyList = createAdjacencyList(nodeCount);
+        readEdges(edgeCount, adjacencyList);
+
+        int[] parent = new int[nodeCount];
+        int[] depth = new int[nodeCount];
+
+        // Root the tree at node 0 and compute parent and depth arrays.
+        buildParentAndDepth(adjacencyList, 0, -1, parent, depth);
+
+        int nodeA = INPUT.nextInt();
+        int nodeB = INPUT.nextInt();
+
+        System.out.println(lowestCommonAncestor(nodeA, nodeB, depth, parent));
+    }
+
+    private static List<List<Integer>> createAdjacencyList(int nodeCount) {
+        List<List<Integer>> adjacencyList = new ArrayList<>(nodeCount);
+        for (int i = 0; i < nodeCount; i++) {
+            adjacencyList.add(new ArrayList<>());
+        }
+        return adjacencyList;
+    }
+
+    private static void readEdges(int edgeCount, List<List<Integer>> adjacencyList) {
+        for (int i = 0; i < edgeCount; i++) {
+            int u = INPUT.nextInt();
+            int v = INPUT.nextInt();
+            adjacencyList.get(u).add(v);
+            adjacencyList.get(v).add(u);
+        }
+    }
+
+    /**
+     * Fills the {@code parent} and {@code depth} arrays for a rooted tree using DFS.
+     *
+     * @param adjacencyList adjacency list of the tree
+     * @param current       current node
+     * @param parentNode    parent of the current node (-1 for root)
+     * @param parent        parent[i] = parent of node i
+     * @param depth         depth[i] = depth of node i from the root
+     */
+    private static void buildParentAndDepth(
+            List<List<Integer>> adjacencyList,
+            int current,
+            int parentNode,
+            int[] parent,
+            int[] depth
+    ) {
+        for (int neighbor : adjacencyList.get(current)) {
+            if (neighbor == parentNode) {
+                continue;
+            }
+            parent[neighbor] = current;
+            depth[neighbor] = depth[current] + 1;
+            buildParentAndDepth(adjacencyList, neighbor, current, parent, depth);
+        }
+    }
+
+    /**
+     * Returns the Lowest Common Ancestor (LCA) of two nodes in a tree.
+     *
+     * @param a      first node
+     * @param b      second node
+     * @param depth  depth[i] = depth of node i from the root
+     * @param parent parent[i] = parent of node i
+     * @return the LCA of nodes {@code a} and {@code b}
+     */
+    private static int lowestCommonAncestor(int a, int b, int[] depth, int[] parent) {
+        // Ensure 'a' is at least as deep as 'b'.
+        if (depth[a] < depth[b]) {
+            int temp = a;
+            a = b;
+            b = temp;
+        }
+
+        // Lift 'a' up until both nodes are at the same depth.
+        while (depth[a] > depth[b]) {
+            a = parent[a];
+        }
+
+        // If they meet, this is the LCA.
+        if (a == b) {
+            return a;
+        }
+
+        // Lift both nodes up together until their parents match.
+        while (a != b) {
+            a = parent[a];
+            b = parent[b];
+        }
+
+        return a;
+    }
+}

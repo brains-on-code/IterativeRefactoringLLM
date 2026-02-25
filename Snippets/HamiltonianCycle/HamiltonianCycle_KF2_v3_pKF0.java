@@ -1,0 +1,98 @@
+package com.thealgorithms.datastructures.graphs;
+
+import java.util.Arrays;
+
+public class HamiltonianCycle {
+
+    private int vertexCount;
+    private int pathLength;
+    private int[] cycle;
+    private int[][] graph;
+
+    public int[] findHamiltonianCycle(int[][] graph) {
+        if (graph.length == 1) {
+            return new int[] {0, 0};
+        }
+
+        initialize(graph);
+
+        if (!searchPathFrom(0)) {
+            Arrays.fill(cycle, -1);
+        } else {
+            closeCycle();
+        }
+
+        return cycle;
+    }
+
+    private void initialize(int[][] graph) {
+        this.vertexCount = graph.length;
+        this.graph = graph;
+        this.cycle = new int[vertexCount + 1];
+        Arrays.fill(cycle, -1);
+        cycle[0] = 0;
+        pathLength = 1;
+    }
+
+    private void closeCycle() {
+        cycle[cycle.length - 1] = cycle[0];
+    }
+
+    private boolean searchPathFrom(int currentVertex) {
+        if (isCycleComplete(currentVertex)) {
+            return true;
+        }
+
+        if (pathLength == vertexCount) {
+            return false;
+        }
+
+        for (int nextVertex = 0; nextVertex < vertexCount; nextVertex++) {
+            if (graph[currentVertex][nextVertex] == 1 && tryNextVertex(currentVertex, nextVertex)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isCycleComplete(int currentVertex) {
+        return graph[currentVertex][0] == 1 && pathLength == vertexCount;
+    }
+
+    private boolean tryNextVertex(int currentVertex, int nextVertex) {
+        if (isVertexInCurrentPath(nextVertex)) {
+            return false;
+        }
+
+        addVertexToPath(currentVertex, nextVertex);
+
+        if (searchPathFrom(nextVertex)) {
+            return true;
+        }
+
+        removeVertexFromPath(currentVertex, nextVertex);
+        return false;
+    }
+
+    private void addVertexToPath(int currentVertex, int nextVertex) {
+        cycle[pathLength++] = nextVertex;
+        graph[currentVertex][nextVertex] = 0;
+        graph[nextVertex][currentVertex] = 0;
+    }
+
+    private void removeVertexFromPath(int currentVertex, int nextVertex) {
+        graph[currentVertex][nextVertex] = 1;
+        graph[nextVertex][currentVertex] = 1;
+        cycle[--pathLength] = -1;
+    }
+
+    private boolean isVertexInCurrentPath(int vertex) {
+        for (int i = 0; i < pathLength; i++) {
+            if (cycle[i] == vertex) {
+                return true;
+            }
+        }
+        return false;
+    }
+}

@@ -1,0 +1,99 @@
+package com.thealgorithms.stacks;
+
+import java.util.Stack;
+
+/**
+ * Utility class for working with postfix expressions.
+ */
+public final class PostfixConverter {
+
+    private PostfixConverter() {
+    }
+
+    /**
+     * Checks whether the given character is a supported operator.
+     *
+     * @param ch the character to check
+     * @return true if the character is an operator, false otherwise
+     */
+    public static boolean isOperator(char ch) {
+        return ch == '+'
+            || ch == '-'
+            || ch == '/'
+            || ch == '*'
+            || ch == '^';
+    }
+
+    /**
+     * Validates whether the given string is a valid postfix expression.
+     * Operands are assumed to be single alphabetic characters.
+     *
+     * @param postfixExpression the postfix expression to validate
+     * @return true if the expression is valid, false otherwise
+     */
+    public static boolean isValidPostfixExpression(String postfixExpression) {
+        if (postfixExpression.length() == 1 && Character.isAlphabetic(postfixExpression.charAt(0))) {
+            return true;
+        }
+
+        if (postfixExpression.length() < 3) {
+            return false;
+        }
+
+        int operandCount = 0;
+        int operatorCount = 0;
+
+        for (char token : postfixExpression.toCharArray()) {
+            if (isOperator(token)) {
+                operatorCount++;
+                if (operatorCount >= operandCount) {
+                    return false;
+                }
+            } else {
+                operandCount++;
+            }
+        }
+
+        return operandCount == operatorCount + 1;
+    }
+
+    /**
+     * Converts a postfix expression to its equivalent infix expression.
+     * Operands are assumed to be single alphabetic characters.
+     *
+     * @param postfixExpression the postfix expression to convert
+     * @return the corresponding infix expression
+     * @throws IllegalArgumentException if the postfix expression is invalid
+     */
+    public static String convertPostfixToInfix(String postfixExpression) {
+        if (postfixExpression.isEmpty()) {
+            return "";
+        }
+
+        if (!isValidPostfixExpression(postfixExpression)) {
+            throw new IllegalArgumentException("Invalid Postfix Expression");
+        }
+
+        Stack<String> operands = new Stack<>();
+        StringBuilder currentSubExpression = new StringBuilder();
+
+        for (char token : postfixExpression.toCharArray()) {
+            if (!isOperator(token)) {
+                operands.push(Character.toString(token));
+            } else {
+                String rightOperand = operands.pop();
+                String leftOperand = operands.pop();
+                currentSubExpression
+                    .append('(')
+                    .append(leftOperand)
+                    .append(token)
+                    .append(rightOperand)
+                    .append(')');
+                operands.push(currentSubExpression.toString());
+                currentSubExpression.setLength(0);
+            }
+        }
+
+        return operands.pop();
+    }
+}

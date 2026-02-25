@@ -1,0 +1,134 @@
+package com.thealgorithms.conversions;
+
+import java.util.Map;
+
+public final class IntegerToEnglish {
+
+    private static final Map<Integer, String> BASE_NUMBERS_MAP = Map.ofEntries(
+        Map.entry(0, ""),
+        Map.entry(1, "One"),
+        Map.entry(2, "Two"),
+        Map.entry(3, "Three"),
+        Map.entry(4, "Four"),
+        Map.entry(5, "Five"),
+        Map.entry(6, "Six"),
+        Map.entry(7, "Seven"),
+        Map.entry(8, "Eight"),
+        Map.entry(9, "Nine"),
+        Map.entry(10, "Ten"),
+        Map.entry(11, "Eleven"),
+        Map.entry(12, "Twelve"),
+        Map.entry(13, "Thirteen"),
+        Map.entry(14, "Fourteen"),
+        Map.entry(15, "Fifteen"),
+        Map.entry(16, "Sixteen"),
+        Map.entry(17, "Seventeen"),
+        Map.entry(18, "Eighteen"),
+        Map.entry(19, "Nineteen"),
+        Map.entry(20, "Twenty"),
+        Map.entry(30, "Thirty"),
+        Map.entry(40, "Forty"),
+        Map.entry(50, "Fifty"),
+        Map.entry(60, "Sixty"),
+        Map.entry(70, "Seventy"),
+        Map.entry(80, "Eighty"),
+        Map.entry(90, "Ninety"),
+        Map.entry(100, "Hundred")
+    );
+
+    private static final Map<Integer, String> THOUSAND_POWER_MAP = Map.ofEntries(
+        Map.entry(1, "Thousand"),
+        Map.entry(2, "Million"),
+        Map.entry(3, "Billion")
+    );
+
+    private IntegerToEnglish() {
+        // Prevent instantiation of utility class.
+    }
+
+    /**
+     * Converts a number from 1 to 999 into English words.
+     *
+     * @param number the number to convert (1–999)
+     * @return the English words representation of the number
+     */
+    private static String convertToWords(int number) {
+        StringBuilder result = new StringBuilder();
+
+        int remainder = number % 100;
+        appendTensAndOnes(result, remainder);
+
+        int hundredsDigit = number / 100;
+        if (hundredsDigit > 0) {
+            String hundredsPart = String.format("%s Hundred", BASE_NUMBERS_MAP.get(hundredsDigit));
+            if (result.length() > 0) {
+                result.insert(0, " ");
+            }
+            result.insert(0, hundredsPart);
+        }
+
+        return result.toString().trim();
+    }
+
+    private static void appendTensAndOnes(StringBuilder result, int remainder) {
+        if (remainder <= 20 || BASE_NUMBERS_MAP.containsKey(remainder)) {
+            result.append(BASE_NUMBERS_MAP.get(remainder));
+            return;
+        }
+
+        int tensDigit = remainder / 10;
+        int onesDigit = remainder % 10;
+
+        String tens = BASE_NUMBERS_MAP.getOrDefault(tensDigit * 10, "");
+        String ones = BASE_NUMBERS_MAP.getOrDefault(onesDigit, "");
+
+        result.append(tens);
+        if (!ones.isEmpty()) {
+            result.append(" ").append(ones);
+        }
+    }
+
+    /**
+     * Converts an integer into its English words representation.
+     *
+     * @param number the integer to convert
+     * @return the English words representation of the integer
+     */
+    public static String integerToEnglishWords(int number) {
+        if (number == 0) {
+            return "Zero";
+        }
+
+        StringBuilder result = new StringBuilder();
+        int thousandGroupIndex = 0;
+
+        while (number > 0) {
+            int groupValue = number % 1000;
+            number /= 1000;
+
+            if (groupValue > 0) {
+                String groupWords = convertToWords(groupValue);
+                appendThousandPower(result, groupWords, thousandGroupIndex);
+            }
+
+            thousandGroupIndex++;
+        }
+
+        return result.toString().trim();
+    }
+
+    private static void appendThousandPower(StringBuilder result, String groupWords, int thousandGroupIndex) {
+        if (groupWords.isEmpty()) {
+            return;
+        }
+
+        if (thousandGroupIndex > 0) {
+            groupWords += " " + THOUSAND_POWER_MAP.get(thousandGroupIndex);
+        }
+
+        if (result.length() > 0) {
+            result.insert(0, " ");
+        }
+        result.insert(0, groupWords);
+    }
+}

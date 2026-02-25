@@ -1,0 +1,189 @@
+package com.thealgorithms.others;
+
+import java.util.Scanner;
+
+/**
+ * Implementation of Banker's Algorithm.
+ *
+ * Wikipedia: https://en.wikipedia.org/wiki/Banker%27s_algorithm
+ *
+ * Time Complexity: O(n^2 * m)
+ * Space Complexity: O(n * m)
+ * where n = number of processes and m = number of resources.
+ */
+public final class BankersAlgorithm {
+
+    private BankersAlgorithm() {
+        // Utility class
+    }
+
+    /**
+     * Computes the need matrix for each process.
+     */
+    static void calculateNeed(
+            int[][] need,
+            int[][] max,
+            int[][] allocation,
+            int totalProcesses,
+            int totalResources
+    ) {
+        for (int process = 0; process < totalProcesses; process++) {
+            for (int resource = 0; resource < totalResources; resource++) {
+                need[process][resource] = max[process][resource] - allocation[process][resource];
+            }
+        }
+    }
+
+    /**
+     * Checks whether the system is in a safe state.
+     *
+     * @param processes       array of process IDs (0...n-1), size = n
+     * @param available       array of available instances of each resource, size = m
+     * @param max             matrix of maximum demand of each process, size = n*m
+     * @param allocation      matrix of currently allocated resources to each process, size = n*m
+     * @param totalProcesses  number of processes, n
+     * @param totalResources  number of resources, m
+     * @return true if the system is in a safe state, false otherwise
+     */
+    static boolean checkSafeSystem(
+            int[] processes,
+            int[] available,
+            int[][] max,
+            int[][] allocation,
+            int totalProcesses,
+            int totalResources
+    ) {
+        int[][] need = new int[totalProcesses][totalResources];
+        calculateNeed(need, max, allocation, totalProcesses, totalResources);
+
+        boolean[] finished = new boolean[totalProcesses];
+        int[] safeSequence = new int[totalProcesses];
+
+        int[] work = new int[totalResources];
+        System.arraycopy(available, 0, work, 0, totalResources);
+
+        int completedCount = 0;
+
+        while (completedCount < totalProcesses) {
+            boolean progressMade = false;
+
+            for (int process = 0; process < totalProcesses; process++) {
+                if (finished[process]) {
+                    continue;
+                }
+
+                if (!canProcessBeSatisfied(process, need, work, totalResources)) {
+                    continue;
+                }
+
+                allocateResourcesToWork(process, allocation, work, totalResources);
+                safeSequence[completedCount++] = process;
+                finished[process] = true;
+                progressMade = true;
+            }
+
+            if (!progressMade) {
+                System.out.print("The system is not in the safe state because of lack of resources");
+                return false;
+            }
+        }
+
+        printSafeSequence(safeSequence, totalProcesses);
+        return true;
+    }
+
+    private static boolean canProcessBeSatisfied(
+            int process,
+            int[][] need,
+            int[] work,
+            int totalResources
+    ) {
+        for (int resource = 0; resource < totalResources; resource++) {
+            if (need[process][resource] > work[resource]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static void allocateResourcesToWork(
+            int process,
+            int[][] allocation,
+            int[] work,
+            int totalResources
+    ) {
+        for (int resource = 0; resource < totalResources; resource++) {
+            work[resource] += allocation[process][resource];
+        }
+    }
+
+    private static void printSafeSequence(int[] safeSequence, int totalProcesses) {
+        System.out.print("The system is in safe sequence and the sequence is as follows: ");
+        for (int i = 0; i < totalProcesses; i++) {
+            System.out.print("P" + safeSequence[i] + " ");
+        }
+    }
+
+    /**
+     * Main method for running Banker's Algorithm interactively.
+     */
+    public static void main(String[] args) {
+        try (Scanner scanner = new Scanner(System.in)) {
+            int numberOfProcesses = readInt(scanner, "Enter total number of processes");
+            int numberOfResources = readInt(scanner, "Enter total number of resources");
+
+            int[] processes = initializeProcesses(numberOfProcesses);
+            int[] available = readAvailableResources(scanner, numberOfResources);
+            int[][] max = readMatrix(scanner, numberOfProcesses, numberOfResources, "--Enter the maximum matrix--");
+            int[][] allocation =
+                    readMatrix(scanner, numberOfProcesses, numberOfResources, "--Enter the allocation matrix--");
+
+            checkSafeSystem(processes, available, max, allocation, numberOfProcesses, numberOfResources);
+        }
+    }
+
+    private static int readInt(Scanner scanner, String message) {
+        System.out.println(message);
+        return scanner.nextInt();
+    }
+
+    private static int[] initializeProcesses(int numberOfProcesses) {
+        int[] processes = new int[numberOfProcesses];
+        for (int i = 0; i < numberOfProcesses; i++) {
+            processes[i] = i;
+        }
+        return processes;
+    }
+
+    private static int[] readAvailableResources(Scanner scanner, int numberOfResources) {
+        System.out.println("--Enter the availability of--");
+        int[] available = new int[numberOfResources];
+        for (int resource = 0; resource < numberOfResources; resource++) {
+            System.out.println("Resource " + resource + ": ");
+            available[resource] = scanner.nextInt();
+        }
+        return available;
+    }
+
+    private static int[][] readMatrix(
+            Scanner scanner,
+            int numberOfProcesses,
+            int numberOfResources,
+            String headerMessage
+    ) {
+        System.out.println(headerMessage);
+        int[][] matrix = new int[numberOfProcesses][numberOfResources];
+        for (int process = 0; process < numberOfProcesses; process++) {
+            System.out.println("For process " + process + ": ");
+            for (int resource = 0; resource < numberOfResources; resource++) {
+                String prompt =
+                        headerMessage.contains("maximum")
+                                ? "Enter the maximum instances of resource "
+                                : "Allocated instances of resource ";
+                System.out.println(prompt + resource);
+                matrix[process][resource] = scanner.nextInt();
+            }
+        }
+        return matrix;
+    }
+}

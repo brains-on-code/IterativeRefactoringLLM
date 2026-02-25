@@ -1,0 +1,62 @@
+package com.thealgorithms.datastructures.trees;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
+
+public final class LevelOrderTraversal {
+
+    private LevelOrderTraversal() {
+        // Utility class; prevent instantiation
+    }
+
+    public static List<List<Integer>> traverse(BinaryTree.Node root) {
+        if (root == null) {
+            return List.of();
+        }
+
+        List<List<Integer>> levels = new ArrayList<>();
+        Deque<BinaryTree.Node> queue = new ArrayDeque<>();
+        queue.add(root);
+
+        while (!queue.isEmpty()) {
+            int levelSize = queue.size();
+            List<Integer> currentLevel = new ArrayList<>(levelSize);
+
+            for (int i = 0; i < levelSize; i++) {
+                BinaryTree.Node currentNode = queue.poll();
+                currentLevel.add(currentNode.data);
+
+                if (currentNode.left != null) {
+                    queue.add(currentNode.left);
+                }
+
+                if (currentNode.right != null) {
+                    queue.add(currentNode.right);
+                }
+            }
+
+            levels.add(currentLevel);
+        }
+
+        return levels;
+    }
+
+    public static void printGivenLevel(BinaryTree.Node root, int level) {
+        if (root == null) {
+            System.out.println("Root node must not be null! Exiting.");
+            return;
+        }
+
+        if (level == 1) {
+            System.out.print(root.data + " ");
+            return;
+        }
+
+        if (level > 1) {
+            printGivenLevel(root.left, level - 1);
+            printGivenLevel(root.right, level - 1);
+        }
+    }
+}

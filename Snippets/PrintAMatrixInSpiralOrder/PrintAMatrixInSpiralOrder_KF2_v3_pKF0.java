@@ -1,0 +1,64 @@
+package com.thealgorithms.matrix;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class PrintAMatrixInSpiralOrder {
+
+    public List<Integer> print(int[][] matrix, int totalRows, int totalCols) {
+        List<Integer> spiralOrder = new ArrayList<>();
+
+        if (matrix == null || totalRows <= 0 || totalCols <= 0) {
+            return spiralOrder;
+        }
+
+        int top = 0;
+        int bottom = totalRows - 1;
+        int left = 0;
+        int right = totalCols - 1;
+
+        while (top <= bottom && left <= right) {
+            addTopRow(matrix, top, left, right, spiralOrder);
+            top++;
+
+            addRightColumn(matrix, right, top, bottom, spiralOrder);
+            right--;
+
+            if (top <= bottom) {
+                addBottomRow(matrix, bottom, left, right, spiralOrder);
+                bottom--;
+            }
+
+            if (left <= right) {
+                addLeftColumn(matrix, left, top, bottom, spiralOrder);
+                left++;
+            }
+        }
+
+        return spiralOrder;
+    }
+
+    private void addTopRow(int[][] matrix, int row, int startCol, int endCol, List<Integer> result) {
+        for (int col = startCol; col <= endCol; col++) {
+            result.add(matrix[row][col]);
+        }
+    }
+
+    private void addRightColumn(int[][] matrix, int col, int startRow, int endRow, List<Integer> result) {
+        for (int row = startRow; row <= endRow; row++) {
+            result.add(matrix[row][col]);
+        }
+    }
+
+    private void addBottomRow(int[][] matrix, int row, int startCol, int endCol, List<Integer> result) {
+        for (int col = endCol; col >= startCol; col--) {
+            result.add(matrix[row][col]);
+        }
+    }
+
+    private void addLeftColumn(int[][] matrix, int col, int startRow, int endRow, List<Integer> result) {
+        for (int row = endRow; row >= startRow; row--) {
+            result.add(matrix[row][col]);
+        }
+    }
+}

@@ -1,0 +1,97 @@
+package com.thealgorithms.others;
+
+import java.util.Scanner;
+
+class PageRank {
+
+    private static final int MAX_NODES = 10;
+    private static final double DAMPING_FACTOR = 0.85;
+    private static final int ITERATIONS = 2;
+
+    private final int[][] adjacencyMatrix = new int[MAX_NODES][MAX_NODES];
+    private final double[] pageRank = new double[MAX_NODES];
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the Number of WebPages: ");
+        int nodeCount = scanner.nextInt();
+
+        PageRank pageRankCalculator = new PageRank();
+
+        System.out.println("Enter the Adjacency Matrix with 1->PATH & 0->NO PATH Between two WebPages: ");
+        for (int i = 1; i <= nodeCount; i++) {
+            for (int j = 1; j <= nodeCount; j++) {
+                pageRankCalculator.adjacencyMatrix[i][j] = scanner.nextInt();
+                if (i == j) {
+                    pageRankCalculator.adjacencyMatrix[i][j] = 0;
+                }
+            }
+        }
+
+        pageRankCalculator.calculate(nodeCount);
+        scanner.close();
+    }
+
+    public void calculate(int totalNodes) {
+        double initialPageRank = 1.0 / totalNodes;
+        double[] tempPageRank = new double[MAX_NODES];
+
+        System.out.printf("Total Number of Nodes: %d\tInitial PageRank of All Nodes: %.6f%n",
+                totalNodes, initialPageRank);
+
+        for (int i = 1; i <= totalNodes; i++) {
+            pageRank[i] = initialPageRank;
+        }
+
+        System.out.println("\nInitial PageRank Values, 0th Step");
+        printPageRanks(totalNodes);
+
+        int iteration = 1;
+        while (iteration <= ITERATIONS) {
+            for (int i = 1; i <= totalNodes; i++) {
+                tempPageRank[i] = pageRank[i];
+                pageRank[i] = 0.0;
+            }
+
+            for (int internalNode = 1; internalNode <= totalNodes; internalNode++) {
+                for (int externalNode = 1; externalNode <= totalNodes; externalNode++) {
+                    if (adjacencyMatrix[externalNode][internalNode] == 1) {
+                        double outgoingLinks = countOutgoingLinks(externalNode, totalNodes);
+                        if (outgoingLinks > 0) {
+                            pageRank[internalNode] += tempPageRank[externalNode] * (1.0 / outgoingLinks);
+                        }
+                    }
+                }
+            }
+
+            System.out.printf("%nAfter %dth Step%n", iteration);
+            printPageRanks(totalNodes);
+
+            iteration++;
+        }
+
+        for (int i = 1; i <= totalNodes; i++) {
+            pageRank[i] = (1 - DAMPING_FACTOR) + DAMPING_FACTOR * pageRank[i];
+        }
+
+        System.out.println("\nFinal Page Rank:");
+        printPageRanks(totalNodes);
+    }
+
+    private double countOutgoingLinks(int node, int totalNodes) {
+        double outgoingLinks = 0.0;
+        for (int i = 1; i <= totalNodes; i++) {
+            if (adjacencyMatrix[node][i] == 1) {
+                outgoingLinks++;
+            }
+        }
+        return outgoingLinks;
+    }
+
+    private void printPageRanks(int totalNodes) {
+        for (int i = 1; i <= totalNodes; i++) {
+            System.out.printf("Page Rank of %d is:\t%.6f%n", i, pageRank[i]);
+        }
+    }
+}

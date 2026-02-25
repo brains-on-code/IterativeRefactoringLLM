@@ -1,0 +1,61 @@
+package com.thealgorithms.backtracking;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Utility class for generating combinations.
+ */
+public final class CombinationsGenerator {
+
+    private CombinationsGenerator() {
+    }
+
+    /**
+     * Generates all combinations of size combinationSize from the range [0, upperBound).
+     *
+     * @param upperBound      the upper bound (exclusive) of the range of integers to choose from; must be non-negative
+     * @param combinationSize the size of each combination; must be non-negative and less than or equal to upperBound
+     * @return a list of all combinations, where each combination is represented as a list of integers
+     * @throws IllegalArgumentException if upperBound or combinationSize are negative, or if combinationSize > upperBound
+     */
+    public static List<List<Integer>> generateCombinations(int upperBound, int combinationSize) {
+        if (upperBound < 0 || combinationSize < 0 || combinationSize > upperBound) {
+            throw new IllegalArgumentException(
+                "Invalid input: upperBound must be non-negative, combinationSize must be non-negative and less than or equal to upperBound."
+            );
+        }
+
+        List<List<Integer>> allCombinations = new ArrayList<>();
+        buildCombinations(allCombinations, new ArrayList<>(), 0, upperBound, combinationSize);
+        return allCombinations;
+    }
+
+    /**
+     * Backtracking helper to build combinations.
+     *
+     * @param allCombinations   the list collecting all generated combinations
+     * @param partialCombination the current combination being built
+     * @param startIndex        the current starting value for the next element to add
+     * @param upperBound        the upper bound (exclusive) of the range of integers to choose from
+     * @param combinationSize   the target size of each combination
+     */
+    private static void buildCombinations(
+        List<List<Integer>> allCombinations,
+        List<Integer> partialCombination,
+        int startIndex,
+        int upperBound,
+        int combinationSize
+    ) {
+        if (partialCombination.size() == combinationSize) {
+            allCombinations.add(new ArrayList<>(partialCombination));
+            return;
+        }
+
+        for (int candidate = startIndex; candidate < upperBound; candidate++) {
+            partialCombination.add(candidate);
+            buildCombinations(allCombinations, partialCombination, candidate + 1, upperBound, combinationSize);
+            partialCombination.remove(partialCombination.size() - 1);
+        }
+    }
+}

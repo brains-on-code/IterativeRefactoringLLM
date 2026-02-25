@@ -1,0 +1,65 @@
+package com.thealgorithms.conversions;
+
+/**
+ * Utility class for converting octal numbers to other bases.
+ */
+public final class OctalToHexadecimal {
+
+    private static final int OCTAL_BASE = 8;
+    private static final int HEX_BASE = 16;
+    private static final String HEX_DIGITS = "0123456789ABCDEF";
+
+    private OctalToHexadecimal() {
+        // Prevent instantiation
+    }
+
+    /**
+     * Converts an octal number (as a string) to its decimal equivalent.
+     *
+     * @param octalNumber octal number as a non-null, non-empty string containing only digits 0–7
+     * @return decimal representation of the given octal number
+     * @throws IllegalArgumentException if the input is null, empty, or contains non-octal digits
+     */
+    public static int octalToDecimal(String octalNumber) {
+        if (octalNumber == null || octalNumber.isEmpty()) {
+            throw new IllegalArgumentException("Input cannot be null or empty");
+        }
+
+        int decimalValue = 0;
+
+        for (int i = 0; i < octalNumber.length(); i++) {
+            char currentChar = octalNumber.charAt(i);
+
+            if (currentChar < '0' || currentChar > '7') {
+                throw new IllegalArgumentException("Incorrect octal digit: " + currentChar);
+            }
+
+            int currentDigit = currentChar - '0';
+            decimalValue = decimalValue * OCTAL_BASE + currentDigit;
+        }
+
+        return decimalValue;
+    }
+
+    /**
+     * Converts a decimal number to its hexadecimal equivalent.
+     *
+     * @param decimalNumber non-negative decimal integer
+     * @return uppercase hexadecimal representation of the given decimal number
+     */
+    public static String decimalToHexadecimal(int decimalNumber) {
+        if (decimalNumber == 0) {
+            return "0";
+        }
+
+        StringBuilder hexValue = new StringBuilder();
+
+        while (decimalNumber > 0) {
+            int digit = decimalNumber % HEX_BASE;
+            hexValue.insert(0, HEX_DIGITS.charAt(digit));
+            decimalNumber /= HEX_BASE;
+        }
+
+        return hexValue.toString();
+    }
+}

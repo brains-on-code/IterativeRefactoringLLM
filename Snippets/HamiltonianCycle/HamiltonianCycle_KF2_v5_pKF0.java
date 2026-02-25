@@ -1,0 +1,112 @@
+package com.thealgorithms.datastructures.graphs;
+
+import java.util.Arrays;
+
+public class HamiltonianCycle {
+
+    private int vertexCount;
+    private int pathLength;
+    private int[] cycle;
+    private int[][] graph;
+
+    public int[] findHamiltonianCycle(int[][] graph) {
+        if (graph.length == 1) {
+            return new int[] {0, 0};
+        }
+
+        initialize(graph);
+
+        boolean hasCycle = searchFromVertex(0);
+        if (!hasCycle) {
+            Arrays.fill(cycle, -1);
+        } else {
+            closeCycle();
+        }
+
+        return cycle;
+    }
+
+    private void initialize(int[][] graph) {
+        this.vertexCount = graph.length;
+        this.graph = graph;
+        this.cycle = new int[vertexCount + 1];
+
+        Arrays.fill(cycle, -1);
+        cycle[0] = 0;
+        pathLength = 1;
+    }
+
+    private void closeCycle() {
+        cycle[cycle.length - 1] = cycle[0];
+    }
+
+    private boolean searchFromVertex(int currentVertex) {
+        if (isCycleComplete(currentVertex)) {
+            return true;
+        }
+
+        if (pathLength == vertexCount) {
+            return false;
+        }
+
+        for (int nextVertex = 0; nextVertex < vertexCount; nextVertex++) {
+            if (isEdge(currentVertex, nextVertex) && tryExtendPath(currentVertex, nextVertex)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isCycleComplete(int currentVertex) {
+        return isEdge(currentVertex, 0) && pathLength == vertexCount;
+    }
+
+    private boolean tryExtendPath(int currentVertex, int nextVertex) {
+        if (isVertexInPath(nextVertex)) {
+            return false;
+        }
+
+        addVertexToPath(currentVertex, nextVertex);
+
+        if (searchFromVertex(nextVertex)) {
+            return true;
+        }
+
+        removeVertexFromPath(currentVertex, nextVertex);
+        return false;
+    }
+
+    private void addVertexToPath(int currentVertex, int nextVertex) {
+        cycle[pathLength++] = nextVertex;
+        removeEdge(currentVertex, nextVertex);
+    }
+
+    private void removeVertexFromPath(int currentVertex, int nextVertex) {
+        addEdge(currentVertex, nextVertex);
+        cycle[--pathLength] = -1;
+    }
+
+    private boolean isVertexInPath(int vertex) {
+        for (int i = 0; i < pathLength; i++) {
+            if (cycle[i] == vertex) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isEdge(int from, int to) {
+        return graph[from][to] == 1;
+    }
+
+    private void addEdge(int from, int to) {
+        graph[from][to] = 1;
+        graph[to][from] = 1;
+    }
+
+    private void removeEdge(int from, int to) {
+        graph[from][to] = 0;
+        graph[to][from] = 0;
+    }
+}

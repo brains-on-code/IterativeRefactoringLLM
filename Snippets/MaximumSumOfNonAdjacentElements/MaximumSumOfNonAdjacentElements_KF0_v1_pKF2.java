@@ -1,0 +1,88 @@
+package com.thealgorithms.dynamicprogramming;
+
+/**
+ * Utility class to compute the maximum sum of non-adjacent elements in an array.
+ *
+ * <p>Provides:
+ * <ul>
+ *     <li>Approach 1: O(n) time, O(n) space (DP array)</li>
+ *     <li>Approach 2: O(n) time, O(1) space (space-optimized)</li>
+ * </ul>
+ *
+ * <p>Reference:
+ * https://takeuforward.org/data-structure/maximum-sum-of-non-adjacent-elements-dp-5/
+ */
+final class MaximumSumOfNonAdjacentElements {
+
+    private MaximumSumOfNonAdjacentElements() {
+        // Prevent instantiation
+    }
+
+    /**
+     * Approach 1: Dynamic programming with an auxiliary array.
+     *
+     * <p>dp[i] = maximum sum of non-adjacent elements from subarray [0..i].
+     *
+     * <p>Time Complexity: O(n)  
+     * Space Complexity: O(n)
+     *
+     * @param arr input array of integers
+     * @return maximum sum of non-adjacent elements
+     */
+    public static int getMaxSumApproach1(int[] arr) {
+        if (arr.length == 0) {
+            return 0;
+        }
+
+        int n = arr.length;
+        int[] dp = new int[n];
+
+        dp[0] = arr[0];
+
+        for (int i = 1; i < n; i++) {
+            int notTake = dp[i - 1];
+            int take = arr[i];
+            if (i > 1) {
+                take += dp[i - 2];
+            }
+            dp[i] = Math.max(take, notTake);
+        }
+
+        return dp[n - 1];
+    }
+
+    /**
+     * Approach 2: Space-optimized dynamic programming using two variables.
+     *
+     * <p>prev1 = maximum sum up to previous index  
+     * prev2 = maximum sum up to index before previous
+     *
+     * <p>Time Complexity: O(n)  
+     * Space Complexity: O(1)
+     *
+     * @param arr input array of integers
+     * @return maximum sum of non-adjacent elements
+     */
+    public static int getMaxSumApproach2(int[] arr) {
+        if (arr.length == 0) {
+            return 0;
+        }
+
+        int prev1 = arr[0];
+        int prev2 = 0;
+
+        for (int i = 1; i < arr.length; i++) {
+            int notTake = prev1;
+            int take = arr[i];
+            if (i > 1) {
+                take += prev2;
+            }
+
+            int current = Math.max(take, notTake);
+            prev2 = prev1;
+            prev1 = current;
+        }
+
+        return prev1;
+    }
+}

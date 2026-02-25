@@ -1,0 +1,108 @@
+package com.thealgorithms.backtracking;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Utility class for finding all paths between two vertices in a directed graph
+ * using backtracking.
+ */
+public class Class1 {
+
+    /** Number of vertices in the graph. */
+    private final int vertexCount;
+
+    /** Stores all paths found between source and destination. */
+    static List<List<Integer>> allPaths = new ArrayList<>();
+
+    /** Adjacency list representation of the graph. */
+    private ArrayList<Integer>[] adjacencyList;
+
+    /**
+     * Constructs a graph with the specified number of vertices.
+     *
+     * @param vertexCount number of vertices in the graph
+     */
+    public Class1(int vertexCount) {
+        this.vertexCount = vertexCount;
+        initializeAdjacencyList();
+    }
+
+    /** Initializes the adjacency list for the graph. */
+    private void initializeAdjacencyList() {
+        adjacencyList = new ArrayList[vertexCount];
+        for (int i = 0; i < vertexCount; i++) {
+            adjacencyList[i] = new ArrayList<>();
+        }
+    }
+
+    /**
+     * Adds a directed edge from {@code from} to {@code to}.
+     *
+     * @param from source vertex
+     * @param to   destination vertex
+     */
+    public void addEdge(int from, int to) {
+        adjacencyList[from].add(to);
+    }
+
+    /**
+     * Finds all paths from {@code source} to {@code destination}.
+     *
+     * @param source      starting vertex
+     * @param destination target vertex
+     */
+    public void findAllPaths(int source, int destination) {
+        boolean[] visited = new boolean[vertexCount];
+        ArrayList<Integer> currentPath = new ArrayList<>();
+
+        currentPath.add(source);
+        backtrackPaths(source, destination, visited, currentPath);
+    }
+
+    /**
+     * Backtracking helper to explore all paths from current vertex to destination.
+     *
+     * @param current     current vertex
+     * @param destination target vertex
+     * @param visited     visited vertices tracker
+     * @param path        current path being explored
+     */
+    private void backtrackPaths(Integer current, Integer destination, boolean[] visited, List<Integer> path) {
+        if (current.equals(destination)) {
+            allPaths.add(new ArrayList<>(path));
+            return;
+        }
+
+        visited[current] = true;
+
+        for (Integer neighbor : adjacencyList[current]) {
+            if (!visited[neighbor]) {
+                path.add(neighbor);
+                backtrackPaths(neighbor, destination, visited, path);
+                path.remove(neighbor);
+            }
+        }
+
+        visited[current] = false;
+    }
+
+    /**
+     * Static utility method to get all paths between two vertices in a directed graph.
+     *
+     * @param vertexCount number of vertices
+     * @param edges       list of directed edges, each as [from, to]
+     * @param source      starting vertex
+     * @param destination target vertex
+     * @return list of all paths from source to destination
+     */
+    public static List<List<Integer>> method5(int vertexCount, int[][] edges, int source, int destination) {
+        allPaths = new ArrayList<>();
+        Class1 graph = new Class1(vertexCount);
+        for (int[] edge : edges) {
+            graph.addEdge(edge[0], edge[1]);
+        }
+        graph.findAllPaths(source, destination);
+        return allPaths;
+    }
+}

@@ -1,0 +1,129 @@
+package com.thealgorithms.backtracking;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public final class KnightTourSolver {
+    private KnightTourSolver() {
+    }
+
+    private static final int BOARD_SIZE = 12;
+
+    private static final int[][] KNIGHT_MOVE_OFFSETS = {
+        {1, -2},
+        {2, -1},
+        {2, 1},
+        {1, 2},
+        {-1, 2},
+        {-2, 1},
+        {-2, -1},
+        {-1, -2},
+    };
+
+    static int[][] board;
+
+    static int innerBoardCellCount;
+
+    public static void initializeBoard() {
+        board = new int[BOARD_SIZE][BOARD_SIZE];
+        innerBoardCellCount = (BOARD_SIZE - 4) * (BOARD_SIZE - 4);
+
+        for (int rowIndex = 0; rowIndex < BOARD_SIZE; rowIndex++) {
+            for (int columnIndex = 0; columnIndex < BOARD_SIZE; columnIndex++) {
+                if (rowIndex < 2
+                    || rowIndex > BOARD_SIZE - 3
+                    || columnIndex < 2
+                    || columnIndex > BOARD_SIZE - 3) {
+                    board[rowIndex][columnIndex] = -1;
+                }
+            }
+        }
+    }
+
+    static boolean solveKnightTour(int currentRow, int currentColumn, int moveNumber) {
+        if (moveNumber > innerBoardCellCount) {
+            return true;
+        }
+
+        List<int[]> candidateMoves = getCandidateMoves(currentRow, currentColumn);
+
+        if (candidateMoves.isEmpty() && moveNumber != innerBoardCellCount) {
+            return false;
+        }
+
+        candidateMoves.sort(Comparator.comparingInt(move -> move[2]));
+
+        for (int[] move : candidateMoves) {
+            int nextRow = move[0];
+            int nextColumn = move[1];
+            board[nextRow][nextColumn] = moveNumber;
+
+            if (!createsDeadEnd(moveNumber, nextRow, nextColumn)
+                && solveKnightTour(nextRow, nextColumn, moveNumber + 1)) {
+                return true;
+            }
+
+            board[nextRow][nextColumn] = 0;
+        }
+
+        return false;
+    }
+
+    static List<int[]> getCandidateMoves(int currentRow, int currentColumn) {
+        List<int[]> movesWithOnwardDegree = new ArrayList<>();
+
+        for (int[] moveOffset : KNIGHT_MOVE_OFFSETS) {
+            int columnOffset = moveOffset[0];
+            int rowOffset = moveOffset[1];
+            int newRow = currentRow + rowOffset;
+            int newColumn = currentColumn + columnOffset;
+
+            if (newRow >= 0
+                && newRow < BOARD_SIZE
+                && newColumn >= 0
+                && newColumn < BOARD_SIZE
+                && board[newRow][newColumn] == 0) {
+
+                int onwardDegree = countOnwardMoves(newRow, newColumn);
+                movesWithOnwardDegree.add(new int[] {newRow, newColumn, onwardDegree});
+            }
+        }
+        return movesWithOnwardDegree;
+    }
+
+    static int countOnwardMoves(int currentRow, int currentColumn) {
+        int onwardMoveCount = 0;
+
+        for (int[] moveOffset : KNIGHT_MOVE_OFFSETS) {
+            int columnOffset = moveOffset[0];
+            int rowOffset = moveOffset[1];
+            int newRow = currentRow + rowOffset;
+            int newColumn = currentColumn + columnOffset;
+
+            if (newRow >= 0
+                && newRow < BOARD_SIZE
+                && newColumn >= 0
+                && newColumn < BOARD_SIZE
+                && board[newRow][newColumn] == 0) {
+
+                onwardMoveCount++;
+            }
+        }
+        return onwardMoveCount;
+    }
+
+    static boolean createsDeadEnd(int moveNumber, int currentRow, int currentColumn) {
+        if (moveNumber < innerBoardCellCount - 1) {
+            List<int[]> nextMoves = getCandidateMoves(currentRow, currentColumn);
+            for (int[] move : nextMoves) {
+                int nextRow = move[0];
+                int nextColumn = move[1];
+                if (countOnwardMoves(nextRow, nextColumn) == 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}

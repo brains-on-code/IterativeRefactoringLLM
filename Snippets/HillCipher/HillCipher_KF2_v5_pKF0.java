@@ -1,0 +1,113 @@
+package com.thealgorithms.ciphers;
+
+public class HillCipher {
+
+    private static final int MODULUS = 26;
+    private static final char PADDING_CHAR = 'X';
+    private static final char BASE_CHAR = 'A';
+    private static final String NON_ALPHABETIC_REGEX = "[^A-Z]";
+
+    public String encrypt(String message, int[][] keyMatrix) {
+        return transform(message, keyMatrix);
+    }
+
+    public String decrypt(String message, int[][] inverseKeyMatrix) {
+        return transform(message, inverseKeyMatrix);
+    }
+
+    private String transform(String message, int[][] matrix) {
+        String normalizedMessage = normalizeMessage(message);
+        int matrixSize = matrix.length;
+
+        validateDeterminant(matrix);
+
+        StringBuilder result = new StringBuilder();
+        int[] messageVector = new int[matrixSize];
+        int[] resultVector = new int[matrixSize];
+
+        for (int index = 0; index < normalizedMessage.length(); index += matrixSize) {
+            fillMessageVector(normalizedMessage, messageVector, index);
+            multiplyMatrixVector(matrix, messageVector, resultVector);
+            appendVectorAsText(result, resultVector);
+        }
+
+        return result.toString();
+    }
+
+    private String normalizeMessage(String message) {
+        if (message == null) {
+            return "";
+        }
+        return message.toUpperCase().replaceAll(NON_ALPHABETIC_REGEX, "");
+    }
+
+    private void fillMessageVector(String message, int[] messageVector, int startIndex) {
+        int size = messageVector.length;
+        for (int i = 0; i < size; i++) {
+            int currentIndex = startIndex + i;
+            char ch = currentIndex < message.length() ? message.charAt(currentIndex) : PADDING_CHAR;
+            messageVector[i] = ch - BASE_CHAR;
+        }
+    }
+
+    private void multiplyMatrixVector(int[][] matrix, int[] vector, int[] result) {
+        int size = vector.length;
+        for (int row = 0; row < size; row++) {
+            int value = 0;
+            for (int col = 0; col < size; col++) {
+                value += matrix[row][col] * vector[col];
+            }
+            result[row] = Math.floorMod(value, MODULUS);
+        }
+    }
+
+    private void appendVectorAsText(StringBuilder builder, int[] resultVector) {
+        for (int value : resultVector) {
+            builder.append((char) (value + BASE_CHAR));
+        }
+    }
+
+    private void validateDeterminant(int[][] keyMatrix) {
+        int size = keyMatrix.length;
+        int determinantValue = determinant(keyMatrix, size);
+        int determinantMod = Math.floorMod(determinantValue, MODULUS);
+
+        if (determinantMod == 0) {
+            throw new IllegalArgumentException(
+                "Invalid key matrix. Determinant is zero modulo " + MODULUS + "."
+            );
+        }
+    }
+
+    private int determinant(int[][] matrix, int size) {
+        if (size == 1) {
+            return matrix[0][0];
+        }
+
+        int det = 0;
+        int sign = 1;
+        int[][] subMatrix = new int[size - 1][size - 1];
+
+        for (int col = 0; col < size; col++) {
+            buildSubMatrix(matrix, subMatrix, size, col);
+            det += sign * matrix[0][col] * determinant(subMatrix, size - 1);
+            sign = -sign;
+        }
+
+        return det;
+    }
+
+    private void buildSubMatrix(int[][] matrix, int[][] subMatrix, int size, int excludedColumn) {
+        int subRow = 0;
+        for (int row = 1; row < size; row++) {
+            int subCol = 0;
+            for (int col = 0; col < size; col++) {
+                if (col == excludedColumn) {
+                    continue;
+                }
+                subMatrix[subRow][subCol++] = matrix[row][col];
+            }
+            subRow++;
+        }
+    }
+}

@@ -1,0 +1,91 @@
+package com.thealgorithms.misc;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+public class ThreeSumProblem {
+
+    public List<List<Integer>> bruteForce(int[] nums, int target) {
+        List<List<Integer>> triplets = new ArrayList<>();
+        int length = nums.length;
+
+        for (int first = 0; first < length; first++) {
+            for (int second = first + 1; second < length; second++) {
+                for (int third = second + 1; third < length; third++) {
+                    int sum = nums[first] + nums[second] + nums[third];
+                    if (sum == target) {
+                        List<Integer> triplet = Arrays.asList(
+                            nums[first],
+                            nums[second],
+                            nums[third]
+                        );
+                        Collections.sort(triplet);
+                        triplets.add(triplet);
+                    }
+                }
+            }
+        }
+
+        return new ArrayList<>(new LinkedHashSet<>(triplets));
+    }
+
+    public List<List<Integer>> twoPointer(int[] nums, int target) {
+        Arrays.sort(nums);
+        List<List<Integer>> triplets = new ArrayList<>();
+        int length = nums.length;
+
+        for (int index = 0; index < length - 2; index++) {
+            int firstValue = nums[index];
+            int left = index + 1;
+            int right = length - 1;
+
+            while (left < right) {
+                int sum = firstValue + nums[left] + nums[right];
+
+                if (sum == target) {
+                    triplets.add(Arrays.asList(firstValue, nums[left], nums[right]));
+                    left++;
+                    right--;
+                } else if (sum < target) {
+                    left++;
+                } else {
+                    right--;
+                }
+            }
+        }
+
+        return new ArrayList<>(new LinkedHashSet<>(triplets));
+    }
+
+    public List<List<Integer>> hashMap(int[] nums, int target) {
+        Arrays.sort(nums);
+        Set<List<Integer>> uniqueTriplets = new HashSet<>();
+        HashMap<Integer, Integer> valueToIndex = new HashMap<>();
+        int length = nums.length;
+
+        for (int index = 0; index < length; index++) {
+            valueToIndex.put(nums[index], index);
+        }
+
+        for (int first = 0; first < length; first++) {
+            for (int second = first + 1; second < length; second++) {
+                int required = target - nums[first] - nums[second];
+                Integer requiredIndex = valueToIndex.get(required);
+
+                if (requiredIndex != null && requiredIndex > second) {
+                    uniqueTriplets.add(
+                        Arrays.asList(nums[first], nums[second], required)
+                    );
+                }
+            }
+        }
+
+        return new ArrayList<>(uniqueTriplets);
+    }
+}
