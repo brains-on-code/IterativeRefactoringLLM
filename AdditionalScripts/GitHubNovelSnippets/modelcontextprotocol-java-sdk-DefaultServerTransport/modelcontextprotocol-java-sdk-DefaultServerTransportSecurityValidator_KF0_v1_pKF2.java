@@ -1,0 +1,143 @@
+/*
+ * Copyright 2026-2026 the original author or authors.
+ */
+
+package io.modelcontextprotocol.server.transport;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import io.modelcontextprotocol.util.Assert;
+
+/**
+ * Default {@link ServerTransportSecurityValidator} implementation that validates
+ * the {@code Origin} header against a configured allow-list.
+ *
+ * <p>Supports:
+ * <ul>
+ *   <li>Exact origin matches (e.g. {@code http://example.com:8080})</li>
+ *   <li>Wildcard port patterns (e.g. {@code http://example.com:*})</li>
+ * </ul>
+ *
+ * @author Daniel Garnier-Moiroux
+ * @see ServerTransportSecurityValidator
+ * @see ServerTransportSecurityException
+ */
+public class DefaultServerTransportSecurityValidator implements ServerTransportSecurityValidator {
+
+	private static final String ORIGIN_HEADER = "Origin";
+
+	private static final ServerTransportSecurityException INVALID_ORIGIN =
+			new ServerTransportSecurityException(403, "Invalid Origin header");
+
+	private final List<String> allowedOrigins;
+
+	/**
+	 * Create a new validator with the given allowed origins.
+	 *
+	 * @param allowedOrigins list of allowed origin patterns; supports exact matches
+	 * (e.g. {@code http://example.com:8080}) and wildcard ports
+	 * (e.g. {@code http://example.com:*})
+	 */
+	public DefaultServerTransportSecurityValidator(List<String> allowedOrigins) {
+		Assert.notNull(allowedOrigins, "allowedOrigins must not be null");
+		this.allowedOrigins = allowedOrigins;
+	}
+
+	@Override
+	public void validateHeaders(Map<String, List<String>> headers) throws ServerTransportSecurityException {
+		for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+			if (!ORIGIN_HEADER.equalsIgnoreCase(entry.getKey())) {
+				continue;
+			}
+			List<String> values = entry.getValue();
+			if (values != null && !values.isEmpty()) {
+				validateOrigin(values.get(0));
+			}
+			return;
+		}
+	}
+
+	/**
+	 * Validate a single origin value against the configured allow-list.
+	 * <p>Subclasses may override to customize origin validation logic.</p>
+	 *
+	 * @param origin the {@code Origin} header value, or {@code null} if not present
+	 * @throws ServerTransportSecurityException if the origin is not allowed
+	 */
+	protected void validateOrigin(String origin) throws ServerTransportSecurityException {
+		// No Origin header: treat as same-origin request, no validation needed
+		if (origin == null || origin.isBlank()) {
+			return;
+		}
+
+		for (String allowed : allowedOrigins) {
+			if (allowed.equals(origin)) {
+				return;
+			}
+			if (isWildcardPortMatch(allowed, origin)) {
+				return;
+			}
+		}
+
+		throw INVALID_ORIGIN;
+	}
+
+	private boolean isWildcardPortMatch(String allowed, String origin) {
+		if (!allowed.endsWith(":*")) {
+			return false;
+		}
+		// "http://example.com:*" -> "http://example.com"
+		String baseOrigin = allowed.substring(0, allowed.length() - 2);
+		return origin.equals(baseOrigin) || origin.startsWith(baseOrigin + ":");
+	}
+
+	/**
+	 * Create a new {@link Builder} for {@link DefaultServerTransportSecurityValidator}.
+	 */
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	/**
+	 * Builder for {@link DefaultServerTransportSecurityValidator}.
+	 */
+	public static class Builder {
+
+		private final List<String> allowedOrigins = new ArrayList<>();
+
+		/**
+		 * Add a single allowed origin pattern.
+		 *
+		 * @param origin origin to allow (e.g. {@code http://localhost:8080} or
+		 * {@code http://example.com:*})
+		 * @return this builder
+		 */
+		public Builder allowedOrigin(String origin) {
+			this.allowedOrigins.add(origin);
+			return this;
+		}
+
+		/**
+		 * Add multiple allowed origin patterns.
+		 *
+		 * @param origins origins to allow
+		 * @return this builder
+		 */
+		public Builder allowedOrigins(List<String> origins) {
+			Assert.notNull(origins, "origins must not be null");
+			this.allowedOrigins.addAll(origins);
+			return this;
+		}
+
+		/**
+		 * Build a new {@link DefaultServerTransportSecurityValidator}.
+		 */
+		public DefaultServerTransportSecurityValidator build() {
+			return new DefaultServerTransportSecurityValidator(allowedOrigins);
+		}
+
+	}
+
+}

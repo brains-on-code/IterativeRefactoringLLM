@@ -1,0 +1,165 @@
+package biz.binarysolutions.imageconverter.image;
+
+import android.graphics.Bitmap;
+import android.net.Uri;
+
+import org.beyka.tiffbitmapfactory.TiffBitmapFactory;
+import org.beyka.tiffbitmapfactory.TiffConverter;
+import org.beyka.tiffbitmapfactory.TiffSaver;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+import biz.binarysolutions.imageconverter.data.FilenameUriTuple;
+import biz.binarysolutions.imageconverter.data.OutputFormat;
+import biz.binarysolutions.imageconverter.exceptions.EncodeException;
+
+public class TiffImageConverter {
+
+    private static TiffBitmapFactory.Options readTiffMetadata(File tiffFile) {
+        TiffBitmapFactory.Options options = new TiffBitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        TiffBitmapFactory.decodeFile(tiffFile, options);
+        options.inJustDecodeBounds = false;
+        return options;
+    }
+
+    private static String buildOutputFilename(
+            String       baseName,
+            int          pageIndex,
+            int          pageCount,
+            OutputFormat format
+    ) {
+        String pageSuffix = String.format(
+                Locale.getDefault(),
+                " (%04d of %04d)",
+                pageIndex,
+                pageCount
+        );
+
+        int dotIndex = baseName.lastIndexOf(".");
+        String nameWithoutExtension =
+                (dotIndex == -1)
+                        ? baseName + pageSuffix
+                        : baseName.substring(0, dotIndex) + pageSuffix;
+
+        return nameWithoutExtension + "." + format.getFileExtension();
+    }
+
+    private static void convertTiffPageDirectly(
+            OutputFormat format,
+            String       inputPath,
+            String       outputPath,
+            int          directoryNumber
+    ) throws Exception {
+
+        TiffConverter.ConverterOptions options = new TiffConverter.ConverterOptions();
+        options.readTiffDirectory = directoryNumber;
+        options.throwExceptions   = true;
+
+        switch (format) {
+            case BMP:
+                TiffConverter.convertTiffBmp(inputPath, outputPath, options, null);
+                break;
+            case JPG:
+                TiffConverter.convertTiffJpg(inputPath, outputPath, options, null);
+                break;
+            case PNG:
+                TiffConverter.convertTiffPng(inputPath, outputPath, options, null);
+                break;
+            default:
+                throw new Exception("Unsupported output format for direct conversion.");
+        }
+    }
+
+    static void saveBitmapAsTiff(Bitmap bitmap, File outputFile) throws IOException {
+        TiffSaver.SaveOptions options = new TiffSaver.SaveOptions();
+        options.inThrowException = true;
+
+        try {
+            TiffSaver.saveBitmap(outputFile, bitmap, options);
+        } catch (Exception e) {
+            IOException ioException = new IOException(e.toString());
+            ioException.setStackTrace(e.getStackTrace());
+            throw ioException;
+        }
+    }
+
+    private static void encodeTiffPage(
+            File                      inputFile,
+            OutputFormat              format,
+            TiffBitmapFactory.Options options,
+            File                      outputFile
+    ) throws EncodeException {
+
+        Bitmap bitmap = TiffBitmapFactory.decodeFile(inputFile, options);
+        int directoryNumber = options.inDirectoryNumber;
+
+        try {
+            if (bitmap != null) {
+                Converter.encodeBitmap(bitmap, format, outputFile);
+                bitmap.recycle();
+            } else {
+                String inputPath  = inputFile.getAbsolutePath();
+                String outputPath = outputFile.getAbsolutePath();
+                convertTiffPageDirectly(format, inputPath, outputPath, directoryNumber);
+            }
+        } catch (Exception e) {
+            throw new EncodeException(e);
+        }
+    }
+
+    public static List<FilenameUriTuple> convertTiff(
+            File         inputFile,
+            OutputFormat format,
+            File         outputDirectory
+    ) throws EncodeException {
+
+        List<FilenameUriTuple> result = new ArrayList<>();
+
+        TiffBitmapFactory.Options options = readTiffMetadata(inputFile);
+        options.inAvailableMemory = 10_000_000;
+
+        List<Integer> failedDirectories = new ArrayList<>();
+        String baseName = inputFile.getName();
+
+        int directoryCount = options.outDirectoryCount;
+        for (int directoryIndex = 0; directoryIndex < directoryCount; directoryIndex++) {
+
+            String outputName = buildOutputFilename(
+                    baseName,
+                    directoryIndex + 1,
+                    directoryCount,
+                    format
+            );
+            File outputFile = new File(outputDirectory, outputName);
+
+            options.inDirectoryNumber = directoryIndex;
+
+            try {
+                encodeTiffPage(inputFile, format, options, outputFile);
+            } catch (EncodeException e) {
+                // Best-effort cleanup; ignore result
+                //noinspection ResultOfMethodCallIgnored
+                outputFile.delete();
+                failedDirectories.add(directoryIndex);
+            }
+
+            result.add(new FilenameUriTuple(outputName, Uri.fromFile(outputFile)));
+        }
+
+        if (!failedDirectories.isEmpty()) {
+            throw new EncodeException(failedDirectories);
+        }
+
+        return result;
+    }
+
+    public static boolean isTiff(File file) {
+        TiffBitmapFactory.Options options = readTiffMetadata(file);
+        return options.outWidth != -1 || options.outHeight != -1;
+    }
+}
