@@ -17,6 +17,8 @@ This folder contains scripts and materials related to the robustness analyses.
 
 This folder contains all original snippets, variations, and all refactored versions that are the base for our results.
 
+Additionally, we provide further background information on our pilot experiment in `AppendixPilotExperiment.pdf` and a technical introduction to the diffparser in `AppendixDiffparser.pdf`.
+
 ## License
 
 This repository is licensed under a
