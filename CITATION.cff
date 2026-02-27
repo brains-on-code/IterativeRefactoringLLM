@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: >-
+  If you use this dataset or our replication package, please cite it using the metadata
+  from this file.
+title: >-
+  From Restructuring to Stabilization: A Large-Scale
+  Experiment on Iterative Code Readability Refactoring with
+  Large Language Models
+type: dataset
+authors:
+  - given-names: Norman
+    family-names: Peitek
+  - given-names: Julia
+    family-names: Hess
+  - given-names: Sven
+    family-names: Apel
+identifiers:
+  - type: doi
+    value: 10.48550/arXiv.2602.21833
+    description: Arxiv preprint
+license: CC-BY-4.0
